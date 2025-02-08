@@ -7,6 +7,17 @@
 #include <vector>
 using namespace std;
 namespace fs = std::filesystem;
+
+#ifdef _WIN32
+const char CLS[4] = "cls";
+const int RENDEREDLINES = 20;
+#endif
+#ifdef __linux__
+const char CLS[6] = "clear";
+const int RENDEREDLINES = 40;
+#endif
+
+
 // :s save
 // :sa <filename> save as
 // :q quit
@@ -17,8 +28,8 @@ namespace fs = std::filesystem;
 // <number>- moves you up by <number> of lines
 
 
-const string SFNAME = "<unfinishedFile>.txt";
-const string SFNAME2 = "<temporaryFile>.txt";
+const string SFNAME = "unfinishedFile.tesf";
+const string SFNAME2 = "temporaryFile.tesf";
 string CURFILENAME = "";
 int currentLine = 1;
 
@@ -37,19 +48,29 @@ vector<string> split(string line);
 enum errors {NoError, InsufficientArguments, FileOpening, InvalidLineNumber, NoFilename};
 
 int main() {
-	system("clear");
+	system(CLS);
 	int x;
 	string line;
-	//cin >> x;
-	//showContent(x);
-	//getline(cin, line);
-	//getline(cin, line);
-	//int success = saveAsFile(line);
-	//cout << success << " " << line << '\n';
 	vector<string> arr;
 	bool flag = true;
 	errors error = NoError;
 	int buffer = 0;
+	// Checking for file existence
+	ifstream tfin(SFNAME);
+	ofstream tfon;
+	if (!tfin.is_open()) {
+		tfon.open(SFNAME);
+		tfon.close();
+	}
+	tfin.close();
+	tfin.open(SFNAME2);
+	if (!tfin) {
+		tfon.open(SFNAME2);
+		tfon.close();
+	}
+	tfin.close();
+
+	showContent(1);
 	while (flag) {
 		getline(cin, line);
 		arr = split(line);
@@ -72,7 +93,7 @@ int main() {
 		       flag = false;
 		} else if (arr[0] == ":w") {
 		       try {
-			       buffer = writeLine(stoi(arr[1]), line.substr(4 + arr[1].length() + 1, line.length() - arr[1].length()));
+			       buffer = writeLine(stoi(arr[1]), line.substr(4 + arr[1].length(), line.length() - arr[1].length()));
 			       //buffer = writeLine(stoi(arr[0]), 
 		       } catch (const exception& e) {
 			       error = InsufficientArguments;
@@ -86,9 +107,15 @@ int main() {
 					buffer = showContent(currentLine + lines);
 				} catch (exception& e) {
 					cout << "Unknow option: " << line << '\n';
+					cout << e.what() << '\n';
+					cout << '"' << arr[0] << '"' << '\n';
+					for (auto i : arr) {
+						cout << i << '\n';
+					}
+
 				}
 			} else {
-				cout << "Unknown option: " << line << '\n';
+				cout << "Unknown option: " << '"' << line << '"' << '\n';
 			}
 		}
 		// Checking if there was error
@@ -117,12 +144,12 @@ int main() {
 	ofstream end(SFNAME);
 	end << '\n';
 	end.close();
-	system("clear");
+	system(CLS);
 	return 0;
 }
 
 int showContent(int lineNum) {
-	system("clear");
+	system(CLS);
 	int counter = 1; // Keeps track which line currently goind to be printed
 	int counter2 = 0; // Keeps track of how many lines are already printed
 	string line; // Helping variable for stroing lines inside of it
@@ -130,30 +157,31 @@ int showContent(int lineNum) {
 	ifstream fin;
 	fin.open(SFNAME);
 	if (fin.is_open()) {
-		currentLine = lineNum;
-		bool flag = false; // It is true if at least one line was printed to the output
-		while (getline(fin, line)) {
-			if (counter < lineNum) {
-				counter++;
-				lastLine = line;
-				continue;
-			}
-			if (counter2 == 40) // after 40 lines are displayed it stops displaying more of them
+		if (lineNum < 1) // Preventing negative lines
+			lineNum = 1;
+			bool flag = false; // It is true if at least one line was printed to the output
+			while (getline(fin, line)) {
+				if (counter < lineNum) {
+					counter++;
+					lastLine = line;
+					continue;
+				}
+				if (counter2 == RENDEREDLINES) // after RENDEREDLINES lines are displayed it stops displaying more of them
 				break;
-			flag = true; // At least 1 line was printed on the screen
-			cout << formatNumber(counter) << "|--"  << line << '\n'; // Printing line on the screen
-			counter2++;
-			counter++;
-		}
-		if (!flag) {
-			cout << lastLine << '\n';
-		}
-		for (int i = 0; i < 40 - counter2; i++) {
-			cout << "~\n";
-		}
-		cout << "----------------\n";
+				flag = true; // At least 1 line was printed on the screen
+				cout << formatNumber(counter) << "|"  << line << '\n'; // Printing line on the screen
+				counter2++;
+				counter++;
+			}
+			if (!flag) {
+				cout << formatNumber(counter) << '|' << lastLine << '\n';
+			}
+			for (int i = 0; i < RENDEREDLINES - counter2; i++) {
+				cout << "~\n";
+			}
+			cout << "----------------\n";
+		currentLine = counter;
 	} else {
-		//cout << "Could not open file while showing content\n";
 		return -2; // Could not open file
 	}
 	fin.close();
@@ -245,7 +273,8 @@ int saveFile() {
 	fs::rename(SFNAME, CURFILENAME);	
 	ofstream fon(SFNAME); // creating helping file again
 	fon.close(); // closing helping file
-	openFile(CURFILENAME);
+	openFile(CURFILENAME); // Opening tesf file after creating it again
+	showContent(currentLine); // Going to the line user was before saving file
 	return 0;
 }
 
@@ -261,7 +290,7 @@ vector<string> split(string line) {
 	vector<string> output;
 	stringstream ss(line);
 	string linePart;
-	while (getline(ss, linePart)) {
+	while (getline(ss, linePart, ' ')) {
 		output.push_back(linePart);
 	}
 
