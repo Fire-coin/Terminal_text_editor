@@ -41,7 +41,8 @@ int openFile(string filename);
 int saveFile(); // done
 int quit();
 int moveToLine(int line);
-int writeLine(int lineNum, string line);
+int writeLine(int lineNum, string line); // will write on current line
+int writeOnLine(int lineNum, string line); // will write on specified line
 int showContent(int lineNum); //done
 int moveBy(int lines, bool up);
 string formatNumber(int lineNum); // done
@@ -96,12 +97,21 @@ int main() {
 		       flag = false;
 		} else if (arr[0] == ":w") {
 		       try {
-			       buffer = writeLine(stoi(arr[1]), line.substr(4 + arr[1].length(), line.length() - arr[1].length()));
-			       //buffer = writeLine(stoi(arr[0]), 
+                    int args = arr.size() - 1; // getting number of passed arguments
+			        if (args >= 1)
+                        buffer = writeLine(currentLine, line.substr(3, line.length() - 3));
+                    else
+                        throw exception();
 		       } catch (const exception& e) {
 			       error = InsufficientArguments;
 		       }
-		} else if (arr[0] == ":l") {
+		} else if (arr[0] == ":wl") {
+            try {
+                buffer = writeOnLine(stoi(arr[1]), line.substr(5 + arr[1].length(), line.length() - arr[1].length()));
+            } catch (const exception& e) {
+                error = InsufficientArguments;
+            }
+        } else if (arr[0] == ":l") {
 			buffer = showContent(stoi(arr[1]));
 		} else {
 			if (arr.size() == 1) {
@@ -210,11 +220,11 @@ int showContent(int lineNum) {
 }
 
 int writeLine(int lineNum, string line) {
-	if (lineNum < 1)
+	if (lineNum < 1 || lineNum > linesInFile)
 		return -1; // Invalid line number
     // Increasing linesInFile if user writes new line
-    if (lineNum > linesInFile)
-        linesInFile = lineNum;
+    // if (lineNum > linesInFile)
+    //     linesInFile = lineNum;
     
 	ofstream fon(SFNAME2);
 	ifstream fin(SFNAME);
@@ -228,13 +238,13 @@ int writeLine(int lineNum, string line) {
 				fon << l << '\n';
 			counter++;
 		}
-		if (counter <= lineNum) {
-			while (counter < lineNum) {
-				fon << '\n';
-				counter++;
-			}
-			fon << line << '\n';
-		}
+		// if (counter <= lineNum) {
+		// 	while (counter < lineNum) {
+		// 		fon << '\n';
+		// 		counter++;
+		// 	}
+		// 	fon << line << '\n';
+		// }
 	} else {
 		return -2; // Could not open file
 	}
@@ -329,3 +339,59 @@ vector<string> split(string line) {
 	return output;
 }
 
+int writeOnLine(int lineNum, string line) {
+	if (lineNum < 1)
+		return -1; // Invalid line number
+    // Increasing linesInFile if user writes new line
+    if (lineNum > linesInFile)
+        linesInFile = lineNum;
+    
+	ofstream fon(SFNAME2);
+	ifstream fin(SFNAME);
+	if (fon.is_open() && fin.is_open()) {
+		int counter = 1;
+		string l;
+		while (getline(fin, l)) {
+			if (counter == lineNum)
+				fon << line << '\n';
+			else
+				fon << l << '\n';
+			counter++;
+		}
+		if (counter <= lineNum) {
+			while (counter < lineNum) {
+				fon << '\n';
+				counter++;
+			}
+			fon << line << '\n';
+		}
+	} else {
+		return -2; // Could not open file
+	}
+	fin.close();
+	fon.close();
+
+	// rewriting new file content back to SFNAME
+	
+	fon.open(SFNAME);
+	fin.open(SFNAME2);
+	
+	if (fin.is_open() && fon.is_open()) {
+		string l;
+		while(getline(fin, l)) {
+			fon << l << '\n';
+		}
+	} else {
+		return -2; // Could not open file
+	}
+
+	fin.close();
+	fon.close();
+
+    // Clearing SFNAME2 file
+    fon.open(SFNAME2);
+    fon << '\n';
+    fon.close();
+
+	return showContent(lineNum);
+}
