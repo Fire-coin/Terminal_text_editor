@@ -32,6 +32,7 @@ const string SFNAME = "unfinishedFile.tesf";
 const string SFNAME2 = "temporaryFile.tesf";
 string CURFILENAME = "";
 int currentLine = 1;
+int linesInFile = 1;
 
 int saveAsFile(string filename); // done
 int openFile(string filename);
@@ -159,6 +160,8 @@ int showContent(int lineNum) {
 	if (fin.is_open()) {
 		if (lineNum < 1) // Preventing negative lines
 			lineNum = 1;
+        if (lineNum > linesInFile) // Preventing setting current line to the non existing one
+            lineNum = linesInFile;
 			bool flag = false; // It is true if at least one line was printed to the output
 			while (getline(fin, line)) {
 				if (counter < lineNum) {
@@ -166,21 +169,29 @@ int showContent(int lineNum) {
 					lastLine = line;
 					continue;
 				}
+                
 				if (counter2 == RENDEREDLINES) // after RENDEREDLINES lines are displayed it stops displaying more of them
 				break;
 				flag = true; // At least 1 line was printed on the screen
-				cout << formatNumber(counter) << "|"  << line << '\n'; // Printing line on the screen
+
+                if (counter == lineNum) // Making current line visible with '>' sign
+                    cout << formatNumber(counter) << ">"  << line << '\n'; 
+				else // Printing line on the screen
+                    cout << formatNumber(counter) << "|"  << line << '\n';
+                
 				counter2++;
 				counter++;
 			}
 			if (!flag) {
-				cout << formatNumber(--counter) << '|' << lastLine << '\n';
+                // If there was no line prited before, it mean that this line will be selected one
+				cout << formatNumber(--counter) << '>' << lastLine << '\n';
 			}
 			for (int i = 0; i < RENDEREDLINES - counter2; i++) {
 				cout << "~\n";
 			}
 			cout << "----------------\n";
-		currentLine = min(counter, lineNum);
+        currentLine = lineNum;
+		// currentLine = min(counter, lineNum);
 	} else {
 		return -2; // Could not open file
 	}
@@ -191,6 +202,10 @@ int showContent(int lineNum) {
 int writeLine(int lineNum, string line) {
 	if (lineNum < 1)
 		return -1; // Invalid line number
+    // Increasing linesInFile if user writes new line
+    if (lineNum > linesInFile)
+        linesInFile = lineNum;
+    
 	ofstream fon(SFNAME2);
 	ifstream fin(SFNAME);
 	if (fon.is_open() && fin.is_open()) {
@@ -259,8 +274,10 @@ int openFile(string filename) {
 	fon.open(SFNAME);
 	string line;
 	CURFILENAME = filename;
+    linesInFile = 0;
 	while (getline(fin, line)) {
 		fon << line << '\n';
+        linesInFile++;
 	}
 	fon.close();
 	fin.close();
