@@ -104,7 +104,7 @@ int main() {
                         throw exception();
 		       } catch (const exception& e) {
 			       error = InsufficientArguments;
-		       }
+		       } 
 		} else if (arr[0] == ":wl") {
             try {
                 buffer = writeOnLine(stoi(arr[1]), line.substr(5 + arr[1].length(), line.length() - arr[1].length()));

@@ -186,7 +186,7 @@ int showContent(int lineNum) {
 	}
 	fin.close();
 	return 0;
-}
+} 
 
 int writeLine(int lineNum, string line) {
 	if (lineNum < 1)
