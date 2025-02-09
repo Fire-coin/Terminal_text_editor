@@ -10,11 +10,13 @@ namespace fs = std::filesystem;
 
 #ifdef _WIN32
 const char CLS[4] = "cls";
-const int RENDEREDLINES = 20;
+const int RENDEREDLINES = 21;
+const int MIDDLE = 11;
 #endif
 #ifdef __linux__
 const char CLS[6] = "clear";
-const int RENDEREDLINES = 40;
+const int RENDEREDLINES = 41;
+const int MIDDLE = 13;
 #endif
 
 
@@ -155,6 +157,14 @@ int showContent(int lineNum) {
 	int counter2 = 0; // Keeps track of how many lines are already printed
 	string line; // Helping variable for stroing lines inside of it
 	string lastLine;
+    // It is the from which lines will be shown
+    // so the currnet line will be shown in the middle
+    int startShowingLine; 
+    if (lineNum - MIDDLE + 1 < 1) {
+        startShowingLine = 1;
+    } else {
+        startShowingLine = lineNum - MIDDLE + 1;
+    }
 	ifstream fin;
 	fin.open(SFNAME);
 	if (fin.is_open()) {
@@ -164,7 +174,7 @@ int showContent(int lineNum) {
             lineNum = linesInFile;
 			bool flag = false; // It is true if at least one line was printed to the output
 			while (getline(fin, line)) {
-				if (counter < lineNum) {
+				if (counter < startShowingLine) {
 					counter++;
 					lastLine = line;
 					continue;
@@ -247,6 +257,11 @@ int writeLine(int lineNum, string line) {
 
 	fin.close();
 	fon.close();
+
+    // Clearing SFNAME2 file
+    fon.open(SFNAME2);
+    fon << '\n';
+    fon.close();
 
 	return showContent(lineNum);
 }
