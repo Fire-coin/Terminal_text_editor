@@ -13,7 +13,7 @@ int format(string);
 string strip(string);
 
 int main() {
-	format("data1.txt");
+	format("TTT.cpp");
 	return 0;
 }
 
@@ -32,17 +32,21 @@ int format(string inputFile) {
 	int lastIntent = 0; // Intent on last line
 	bool back = false; // Indicates if escape caracter with backslash is present
 	bool inStr = false; // True if currently inside of a string
-	char openedWith = NULL; // Stores whether string was opened with ' or "
+	// Value of 255 should be treated as NULL
+	unsigned char openedWith = 255; // Stores whether string was opened with ' or "
 	int curLine = 0; // Current line
 	int changed = 0; // Last index in vector intents
 	vector<pair<int, int>> intents = {pair(0, 0)};
-	bool significant = false; // Is true 
+	bool slash = false;
 
 	if (fin.is_open() && fon.is_open()) {
 		while (getline(fin, line)) {
 			curLine++;
+			slash = false;
+			int counter = 0;
+			line = strip(line);
 			for (char i : line) {
-				line = strip(line);
+				counter++;
 				if (i == '\\') {
 					back = !back;
 					continue;
@@ -62,20 +66,27 @@ int format(string inputFile) {
 						continue;
 					}
 					if (openedWith == i) {
-						openedWith = NULL;
-						inStr = true;
+						openedWith = 255;
+						inStr = true;  
 						continue;
 					}
 				}
 				if (inStr)
 					continue;
 				if (i == '{') {
+					// cout << curLine << ' ' << counter << '\n';
 					intent++;
 					continue;
 				}
 				if (i == '}' && intent > 0) {
 					intent--;
 					continue;
+				}
+
+				if (i == '/') {
+					if (slash)
+						break;
+					slash = true;
 				}
 			}
 			// Generates intents
@@ -85,16 +96,16 @@ int format(string inputFile) {
 			lastIntent = intent;
 			
 			// Used for debuging
-			if (intent != intents[changed].second) {
-				intents.push_back(pair(curLine, intent));
-				changed++;
-			}
-			cout << intent << intents[changed].second << '\n';
+			// if (intent != intents[changed].second) {
+			// 	intents.push_back(pair(curLine, intent));
+			// 	changed++;
+			// }
+			// cout << intent << intents[changed].second << '\n';
 		}
 		// Used for debuging
-		for (auto i : intents) {
-			cout << i.first << ' ' << i.second << '\n';
-		}
+		// for (auto i : intents) {
+		// 	cout << i.first << ' ' << i.second << '\n';
+		// }
 	} else {
 		cout << "Could not open file\n";
 	}
@@ -111,7 +122,7 @@ int format(string inputFile) {
 
 string strip(string str) {
 	int index = 0;
-	while (str[index] == ' ') {
+	while (str[index] == ' ' || str[index] == '\t') {
 		index++;
 	}
 	return str.substr(index, str.length() - index);
