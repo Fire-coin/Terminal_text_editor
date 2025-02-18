@@ -108,6 +108,7 @@ int format(string inputFile) {
 	return 0;
 }
 
+
 string strip(string str) {
 	int index = 0;
 	while (str[index] == ' ') {
