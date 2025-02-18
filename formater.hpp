@@ -7,7 +7,7 @@ using namespace std;
 
 string strip(string);
 
-vector<pair<int, int>> format(string inputFile) {
+vector<pair<int, int>> format(string inputFile, int insertedLine= -1) {
 	ifstream fin(inputFile); // File from which program will read
 
 	string line; // Buffer to read from inputFile
@@ -76,6 +76,11 @@ vector<pair<int, int>> format(string inputFile) {
 			if (intent != intents[changed].second) {
 				intents.push_back(pair(curLine, min(intent, lastIntent)));
 				changed++;
+			}
+			if (curLine == insertedLine - 1) {
+				intents.push_back(pair(insertedLine, intent));
+				changed++;
+				curLine++;
 			}
             lastIntent = intent;
 		}

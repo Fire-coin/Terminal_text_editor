@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <sstream>
 #include <vector>
+#include "formater.hpp"
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -59,6 +60,7 @@ int main() {
 	bool flag = true;
 	errors error = NoError;
 	int buffer = 0;
+	// vector<pair<int, int>> intents;
 	// Checking for file existence
 	ifstream tfin(SFNAME);
 	ofstream tfon;
@@ -73,7 +75,7 @@ int main() {
 		tfon.close();
 	}
 	tfin.close();
-
+	
 	showContent(1);
 	while (flag) {
 		getline(cin, line);
@@ -165,7 +167,7 @@ int showContent(int lineNum) {
 	system(CLS);
 	int counter = 1; // Keeps track which line currently goind to be printed
 	int counter2 = 0; // Keeps track of how many lines are already printed
-	string line; // Helping variable for stroing lines inside of it
+	string line; // Helping variable for string lines inside of it
 	string lastLine;
     // It is the from which lines will be shown
     // so the currnet line will be shown in the middle
@@ -222,58 +224,7 @@ int showContent(int lineNum) {
 int writeLine(int lineNum, string line) {
 	if (lineNum < 1 || lineNum > linesInFile)
 		return -1; // Invalid line number
-    // Increasing linesInFile if user writes new line
-    // if (lineNum > linesInFile)
-    //     linesInFile = lineNum;
-    
-	ofstream fon(SFNAME2);
-	ifstream fin(SFNAME);
-	if (fon.is_open() && fin.is_open()) {
-		int counter = 1;
-		string l;
-		while (getline(fin, l)) {
-			if (counter == lineNum)
-				fon << line << '\n';
-			else
-				fon << l << '\n';
-			counter++;
-		}
-		// if (counter <= lineNum) {
-		// 	while (counter < lineNum) {
-		// 		fon << '\n';
-		// 		counter++;
-		// 	}
-		// 	fon << line << '\n';
-		// }
-	} else {
-		return -2; // Could not open file
-	}
-	fin.close();
-	fon.close();
-
-	// rewriting new file content back to SFNAME
-	
-	fon.open(SFNAME);
-	fin.open(SFNAME2);
-	
-	if (fin.is_open() && fon.is_open()) {
-		string l;
-		while(getline(fin, l)) {
-			fon << l << '\n';
-		}
-	} else {
-		return -2; // Could not open file
-	}
-
-	fin.close();
-	fon.close();
-
-    // Clearing SFNAME2 file
-    fon.open(SFNAME2);
-    fon << '\n';
-    fon.close();
-
-	return showContent(lineNum);
+	return writeOnLine(lineNum, line);
 }
 
 string formatNumber(int lineNumber) {
@@ -349,11 +300,23 @@ int writeOnLine(int lineNum, string line) {
 	ofstream fon(SFNAME2);
 	ifstream fin(SFNAME);
 	if (fon.is_open() && fin.is_open()) {
+		vector<pair<int, int>> intents = format(SFNAME, lineNum);
 		int counter = 1;
 		string l;
 		while (getline(fin, l)) {
-			if (counter == lineNum)
-				fon << line << '\n';
+			//TODO finish this part
+			// 1. fix indexError
+			// 2. fix format function so it will take also the line which is written.
+			if (counter == lineNum) {
+				int index = 0;
+				for (auto p : intents) {
+					if (p.first < lineNum)
+						index++;
+				}
+				// string lineNow('\t');
+				string tabs(intents[index].second, '\t');
+				fon << tabs << line << ' ' << intents[index].second <<'\n';
+			}
 			else
 				fon << l << '\n';
 			counter++;
