@@ -1,6 +1,5 @@
 #include <iostream>
 #include <string>
-#include <sstream>
 #include <fstream>
 #include <vector>
 #include <filesystem>
@@ -43,10 +42,8 @@ int format(string inputFile) {
 		while (getline(fin, line)) {
 			curLine++;
 			slash = false;
-			int counter = 0;
 			line = strip(line);
 			for (char i : line) {
-				counter++;
 				if (i == '\\') {
 					back = !back;
 					continue;
@@ -74,7 +71,6 @@ int format(string inputFile) {
 				if (inStr)
 					continue;
 				if (i == '{') {
-					// cout << curLine << ' ' << counter << '\n';
 					intent++;
 					continue;
 				}
